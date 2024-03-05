@@ -1,0 +1,47 @@
+# Step 1: Data Preprocessing
+import pandas as pd
+
+# Load the Titanic dataset
+data = pd.read_csv('titanic.csv')
+
+# Step 2: Feature Engineering
+# Handle missing values
+data['Age'].fillna(data['Age'].median(), inplace=True)
+data['Embarked'].fillna(data['Embarked'].mode()[0], inplace=True)
+
+# Encode categorical variables
+data = pd.get_dummies(data, columns=['Sex', 'Embarked'], drop_first=True)
+
+# Select relevant features
+X = data.drop(['PassengerId', 'Name', 'Ticket', 'Cabin', 'Survived'], axis=1)
+y = data['Survived']
+
+# Step 3: Model Building
+from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the XGBoost model
+xgb_model = XGBClassifier()
+xgb_model.fit(X_train, y_train)
+
+# Step 4: Model Evaluation
+# Evaluate the model
+y_pred = xgb_model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Analyze feature importance
+feature_importance = pd.DataFrame({'Feature': X.columns, 'Importance': xgb_model.feature_importances_})
+feature_importance = feature_importance.sort_values(by='Importance', ascending=False)
+print("\nFeature Importance:")
+print(feature_importance)
+
+# Step 5: Deployment (Optional)
+# Once satisfied with the model performance, deploy it in a production environment
+# for making predictions.
